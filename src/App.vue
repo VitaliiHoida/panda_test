@@ -2,25 +2,58 @@
   <div class="wrapper">
     <div class="container">
       <div class="logo">
-        <img src="@/assets/logo.png" alt="logo">
+        <img src="https://cdn.abo.media/upload/article/jzjv9rf5khmrx9xamxgc.jpg" alt="logo">
       </div>
       <div class="content">
-        <button type="button" class="active">Главная</button>
-        <button type="button">Избранное</button>
+
+        <button type="button" class="btn" :class="{active: isMain}" @click="isMain = true">Главная</button>
+        <button type="button" class="btn" :class="{active: !isMain}" @click="isMain = false">Избранное</button>
+
+        <div class="cards_wrapper" v-if="isMain">
+          <button type="button" class="btn" @click="addCard" :disabled="!(cards.length < 5)">+</button>
+          <card-component v-for="(items, i) in cards" :key="i" @deleteEl="remove(i)"/>
+        </div>
+
+        <div class="cards_wrapper" v-else>
+          <card-component is-favorite v-for="(item, i) in 1" :key="i"/>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import CardComponent from "@/components/CardComponent.vue";
+
 export default {
   name: 'App',
-  components: {}
+  components: {
+    CardComponent,
+  },
+  data() {
+    return {
+      isMain: true,
+      cards: [{id: 0}],
+      confirmRemove: false,
+      modalIsShown: false,
+      i: 0
+    }
+  },
+  methods: {
+    addCard(){
+      this.i ++;
+      this.cards.push({id: this.i});
+    },
+    remove(i) {
+      this.cards.splice(i, 1);
+
+    }
+  },
 }
 </script>
 
 <style>
-* {
+html, body {
   margin: 0;
   padding: 0;
 }
@@ -34,24 +67,24 @@ export default {
 
 .container {
   box-sizing: border-box;
-  padding: 20px 10px 0 10px;
   width: 100%;
 }
 
 .logo {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 }
 
 .logo img {
-  max-height: 100px;
-  object-fit: contain;
+  width:100%;
+  max-height: 150px;
+  object-fit: cover;
+  object-position: top;
 }
 
-.content button {
+.btn {
   padding: 10px 15px;
   font-size: 16px;
-  line-height: 1;
   font-weight: 500;
   cursor: pointer;
   text-transform: uppercase;
@@ -62,17 +95,47 @@ export default {
   transition: 0.3s ease-in;
 }
 
-.content button:hover,
-.content button:active {
-  background: #4285f4;
+.btn:hover,
+.btn.active {
+  background: mediumblue;
   transition: 0.3s ease-in;
 }
 
-.content button.active {
-  border: 1px solid black;
+.btn-remove {
+  background: indianred;
 }
 
-.content button:first-child {
+.btn-remove:hover {
+  background: darkred;
+}
+
+.btn:disabled {
+  background: gray;
+  cursor: default;
+}
+
+.content .btn:first-child {
   margin-right: 20px;
+}
+
+.cards_wrapper {
+  margin-top: 20px;
+}
+
+input {
+  font-size: 16px;
+  padding: 5px 10px;
+  width: 25%;
+}
+
+.chart canvas {
+  max-height: 250px;
+}
+
+@media screen and (max-width: 768px) {
+  .btn {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
 }
 </style>
