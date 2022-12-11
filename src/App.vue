@@ -1,13 +1,16 @@
 <template>
   <div class="wrapper">
+
+    <div class="logo">
+      <img src="https://cdn.abo.media/upload/article/jzjv9rf5khmrx9xamxgc.jpg" alt="logo">
+    </div>
+
     <div class="container">
-      <div class="logo">
-        <img src="https://cdn.abo.media/upload/article/jzjv9rf5khmrx9xamxgc.jpg" alt="logo">
-      </div>
+
       <div class="content">
 
-        <button type="button" class="btn" :class="{active: isMain}" @click="isMain = true">Главная</button>
-        <button type="button" class="btn" :class="{active: !isMain}" @click="isMain = false">Избранное</button>
+        <button type="button" class="btn" :class="{active: isMain}" @click="isMain = true">Головна</button>
+        <button type="button" class="btn" :class="{active: !isMain}" @click="isMain = false">Обране</button>
 
         <div class="cards_wrapper" v-if="isMain">
           <button type="button" class="btn" @click="addCard" :disabled="!(cards.length < 5)">+</button>
@@ -15,7 +18,11 @@
         </div>
 
         <div class="cards_wrapper" v-else>
-          <card-component is-favorite v-for="(item, i) in 1" :key="i"/>
+          <card-favorite v-for="(item, i) in localCities"
+                          @removeElLocal="removeLocal(el)"
+                          @refresh="renewLocal"
+                          :item="item"
+                          :key="i"/>
         </div>
       </div>
     </div>
@@ -24,11 +31,13 @@
 
 <script>
 import CardComponent from "@/components/CardComponent.vue";
+import CardFavorite from "@/components/CardFavorite.vue";
 
 export default {
   name: 'App',
   components: {
     CardComponent,
+    CardFavorite,
   },
   data() {
     return {
@@ -36,9 +45,11 @@ export default {
       cards: [{id: 0}],
       confirmRemove: false,
       modalIsShown: false,
-      i: 0
+      i: 0,
+      localCities: JSON.parse(localStorage.getItem('localCities')),
     }
   },
+  computed: {},
   methods: {
     addCard(){
       this.i ++;
@@ -46,7 +57,13 @@ export default {
     },
     remove(i) {
       this.cards.splice(i, 1);
-
+    },
+    removeLocal(i){
+      this.localCities.splice(i, 1);
+      localStorage.setItem('localCities', JSON.stringify(this.localCities));
+    },
+    renewLocal() {
+      this.localCities = JSON.parse(localStorage.getItem('localCities'));
     }
   },
 }
@@ -68,6 +85,7 @@ html, body {
 .container {
   box-sizing: border-box;
   width: 100%;
+  padding: 0 10px;
 }
 
 .logo {
@@ -124,12 +142,17 @@ html, body {
 
 input {
   font-size: 16px;
-  padding: 5px 10px;
-  width: 25%;
+  padding: 4px 8px;
 }
 
 .chart canvas {
-  max-height: 250px;
+  width: 100% !important;
+  height: auto !important;
+}
+
+.modal_text {
+  text-align: center;
+  margin: 0;
 }
 
 @media screen and (max-width: 768px) {

@@ -1,32 +1,21 @@
 <template>
   <div class="item_wrapper">
     <div class="head">
-
-      <div class="inputDiv" v-if="!isFavorite">
-        <h3>Місто: &nbsp;</h3>
-        <auto-input :values="cityList" :default-value="city" v-if="!isFavorite" @choose-drop="chooseCity"/>
-      </div>
-      <div v-if="!isFavorite" class="head-btns">
-        <button type="button" class="btn" @click="addToFavorites">До обраного</button>
-        <button type="button" class="btn btn-remove" @click="openModal">Видалити</button>
-      </div>
-
-      <button type="button" v-else class="btn btn-remove" @click="openModalLocal">Видалити</button>
-
+      <button type="button" class="btn btn-remove" @click="openModalLocal">Видалити</button>
     </div>
 
     <div class="body">
       <div class="table">
-        <div ><h3> {{ city.name }} </h3></div>
-        <div><h4> {{ cities[0]?.current?.weather[0].description }} </h4></div>
-        <div>Температура: {{ cities[0]?.current?.temp }} °C</div>
-        <div>Відчувається як: {{ cities[0]?.current?.feels_like }} °C</div>
-        <div>Вологість: {{ cities[0]?.current?.humidity }} %</div>
-        <div>УФ: {{ cities[0]?.current?.uvi }}</div>
-        <div>Точка роси: {{ cities[0]?.current?.dew_point }}°C</div>
-        <div>Видимість: {{ cities[0]?.current?.visibility / 1000 }} км</div>
-        <div>Тиск: {{ cities[0]?.current?.pressure }} гПа</div>
-        <div>Швидкість вітру: {{ cities[0]?.current?.wind_speed }} м/с</div>
+        <div ><h3> {{ item.name }} </h3></div>
+        <div><h4> {{ weather?.current?.weather[0].description }} </h4></div>
+        <div>Температура: {{ weather?.current?.temp }} °C</div>
+        <div>Відчувається як: {{ weather?.current?.feels_like }} °C</div>
+        <div>Вологість: {{ weather?.current?.humidity }} %</div>
+        <div>УФ: {{ weather?.current?.uvi }}</div>
+        <div>Точка роси: {{ weather?.current?.dew_point }}°C</div>
+        <div>Видимість: {{ weather?.current?.visibility / 1000 }} км</div>
+        <div>Тиск: {{ weather?.current?.pressure }} гПа</div>
+        <div>Швидкість вітру: {{ weather?.current?.wind_speed }} м/с</div>
       </div>
       <div class="chart">
         <Line :data="chartData" :options="chartOptions"/>
@@ -53,7 +42,6 @@
 </template>
 
 <script>
-import cities from 'cities.json'; // список всех городов
 
 import {Line} from "vue-chartjs";
 import {
@@ -71,24 +59,22 @@ import {
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, LineElement, PointElement);
 
 import ModalComponent from "@/components/ModalComponent.vue";
-import AutoInput from "@/components/AutoInput.vue";
 
-import {mapState, mapActions} from "vuex";
+import {mapActions} from "vuex";
 
 export default {
   name: 'CardComponent',
   components: {
     ModalComponent,
     Line,
-    AutoInput,
+  },
+  props: {
+    item: {
+      type: Object,
+      required: true
+    },
   },
   emits: ['deleteEl', 'removeElLocal', 'refresh'],
-  props: {
-    index: {
-      type: Number,
-      required: true
-    }
-  },
   data() {
     return {
       show: false,
@@ -100,14 +86,10 @@ export default {
     }
   },
   computed: {
-    ...mapState('weather', ['cities']),
-    cityList() {
-      return cities.filter(city => city.country === 'UA');
-    },
     chartData() {
       let arrLabels = [];
       let points = [];
-      this.cities[0]?.hourly?.forEach(item => {
+      this.weather?.hourly?.forEach(item => {
         let date = new Date(item.dt * 1000);
         let hrs = date.getHours();
         let dates = date.getDate();
@@ -150,7 +132,7 @@ export default {
     },
     chooseCity(e) {
       this.city = e;
-      this.getWeather({lat: e.lat, lon: e.lng})
+
     },
     addToFavorites() {
       if (this.city) {
@@ -161,6 +143,9 @@ export default {
       }
     }
   },
+  created() {
+    this.getWeather({lat: this.item.lat, lon: this.item.lng})
+  }
 }
 </script>
 
