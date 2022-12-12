@@ -10,7 +10,7 @@
       <div class="content">
 
         <button type="button" class="btn" :class="{active: isMain}" @click="isMain = true">Головна</button>
-        <button type="button" class="btn" :class="{active: !isMain}" @click="isMain = false">Обране</button>
+        <button type="button" class="btn" :class="{active: !isMain}" @click="goToFav">Обране</button>
 
         <div class="cards_wrapper" v-if="isMain">
           <button type="button" class="btn" @click="addCard" :disabled="!(cards.length < 5)">+</button>
@@ -48,18 +48,18 @@ export default {
       confirmRemove: false,
       modalIsShown: false,
       i: 0,
-      localCities: JSON.parse(localStorage.getItem('localCities')),
+      localCities: '',
     }
   },
   computed: {},
   methods: {
-    ...mapMutations('weather', ['delCity']),
+    ...mapMutations('weather', ['addEmpty','delCity']),
     addCard(){
       this.i ++;
       this.cards.push({id: this.i});
+      this.addEmpty();
     },
     remove(i) {
-      console.log(i);
       this.cards.splice(i, 1);
       this.delCity(i);
     },
@@ -67,7 +67,14 @@ export default {
       this.localCities.splice(index, 1);
       localStorage.setItem('localCities', JSON.stringify(this.localCities));
     },
+    goToFav() {
+      this.isMain = false;
+      this.localCities = JSON.parse(localStorage.getItem('localCities'));
+    }
   },
+  mounted(){
+    this.addEmpty();
+  }
 }
 </script>
 

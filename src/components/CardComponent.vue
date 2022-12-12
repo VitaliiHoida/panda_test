@@ -1,13 +1,13 @@
 <template>
-  <div class="item_wrapper">
+  <div class="item_wrapper" :class="{'fav' : isFav}">
     <div class="head">
 
-      <div class="inputDiv" >
+      <div class="inputDiv">
         <h3>Місто: &nbsp;</h3>
-        <auto-input :values="cityList" :default-value="city" @choose-drop="chooseCity"/>
+        <auto-input :values="cityList" :default-value="curCity?.city ? curCity?.city : city" @choose-drop="chooseCity"/>
       </div>
       <div class="head-btns">
-        <button type="button" class="btn" @click="addToFavorites">До обраного</button>
+        <button type="button" class="btn" @click="addToFavorites" v-if="!isFav">До обраного</button>
         <button type="button" class="btn btn-remove" @click="openModal">Видалити</button>
       </div>
 
@@ -16,16 +16,16 @@
 
     <div class="body">
       <div class="table">
-        <div><h3> {{ city.name }} </h3></div>
-        <div><h4> {{ cities[index]?.current?.weather[0].description }} </h4></div>
-        <div>Температура: {{ cities[index]?.current?.temp }} °C</div>
-        <div>Відчувається як: {{ cities[index]?.current?.feels_like }} °C</div>
-        <div>Вологість: {{ cities[index]?.current?.humidity }} %</div>
-        <div>УФ: {{ cities[index]?.current?.uvi }}</div>
-        <div>Точка роси: {{ cities[index]?.current?.dew_point }}°C</div>
-        <div>Видимість: {{ cities[index]?.current?.visibility / 1000 }} км</div>
-        <div>Тиск: {{ cities[index]?.current?.pressure }} гПа</div>
-        <div>Швидкість вітру: {{ cities[index]?.current?.wind_speed }} м/с</div>
+        <div><h3> {{ curCity?.city.name }} </h3></div>
+        <div><h4> {{ curCity?.current?.weather[0].description }} </h4></div>
+        <div>Температура: {{ curCity?.current?.temp }} °C</div>
+        <div>Відчувається як: {{ curCity?.current?.feels_like }} °C</div>
+        <div>Вологість: {{ curCity?.current?.humidity }} %</div>
+        <div>УФ: {{ curCity?.current?.uvi }}</div>
+        <div>Точка роси: {{ curCity?.current?.dew_point }}°C</div>
+        <div>Видимість: {{ curCity?.current?.visibility / 1000 }} км</div>
+        <div>Тиск: {{ curCity?.current?.pressure }} гПа</div>
+        <div>Швидкість вітру: {{ curCity?.current?.wind_speed }} м/с</div>
       </div>
       <div class="chart">
         <Line :data="chartData" :options="chartOptions"/>
@@ -35,7 +35,7 @@
 
     <modal-component :isActive="show" @closeModal="close">
       <template #default>
-        <h2 class="modal_text">Видалити місто {{city.name}} з цього списку?</h2>
+        <h2 class="modal_text">Видалити місто {{ curCity?.city.name }} з цього списку?</h2>
       </template>
       <template #footer>
         <button class="btn btn-remove" type="button" @click="deleteItem">
@@ -44,6 +44,13 @@
         <button class="btn" type="button" @click="close">
           Ні
         </button>
+      </template>
+    </modal-component>
+
+    <modal-component :isActive="showFav" @closeModal="closeFav">
+      <template #default>
+        <h2 class="modal_text">Максимальна кількість обраних міст - 5</h2>
+        <p>Видаліть 1 місто зі списку для додавання нового</p>
       </template>
     </modal-component>
 
@@ -96,10 +103,19 @@ export default {
         responsive: true
       },
       city: '',
+      localLength: '',
+      showFav: false,
     }
   },
   computed: {
     ...mapState('weather', ['cities']),
+    isFav() {
+      let arr = localStorage.getItem('localCities');
+      return arr?.includes(JSON.stringify(this.curCity?.city))
+    },
+    curCity() {
+      return this.cities[this.index];
+    },
     cityList() {
       return cities.filter(city => city.country === 'UA');
     },
@@ -138,20 +154,31 @@ export default {
     close() {
       this.show = false;
     },
+    closeFav() {
+      this.showFav = false;
+    },
     deleteItem() {
       this.$emit('deleteEl');
       this.show = false;
     },
     chooseCity(e) {
       this.city = e;
-      this.getWeather({lat: e.lat, lon: e.lng})
+      this.getWeather({lat: e.lat, lon: e.lng, index: this.index, city: this.city})
     },
     addToFavorites() {
-      if (this.city) {
+      if (this.curCity?.city) {
         let localCities = JSON.parse(localStorage.getItem('localCities')) || [];
-        localCities.push(this.city);
-        localStorage.setItem('localCities', JSON.stringify(localCities));
-        this.$emit('refresh');
+        if (localCities.length === 5) {
+          this.showFav = true;
+          return;
+        } else {
+          if (localCities.includes(this.curCity?.city)) {
+            return;
+          } else {
+            localCities.push(this.city);
+            localStorage.setItem('localCities', JSON.stringify(localCities));
+          }
+        }
       }
     }
   },
@@ -168,6 +195,10 @@ export default {
   background: #f3f3f3;
 }
 
+.item_wrapper.fav {
+  border: 2px solid darkgoldenrod;
+}
+
 .head {
   width: 100%;
   display: flex;
@@ -177,10 +208,6 @@ export default {
   float: right;
 }
 
-.inputDiv {
-  display: flex;
-  align-items: center;
-}
 
 .head *:not(:last-child) {
   margin-right: 15px;
