@@ -14,15 +14,16 @@
 
         <div class="cards_wrapper" v-if="isMain">
           <button type="button" class="btn" @click="addCard" :disabled="!(cards.length < 5)">+</button>
-          <card-component v-for="(items, i) in cards" :key="i" @deleteEl="remove(i)"/>
+          <card-component v-for="(items, i) in cards" :key="i"  @deleteEl="remove(i)"  :index="i"/>
         </div>
 
         <div class="cards_wrapper" v-else>
           <card-favorite v-for="(item, i) in localCities"
-                          @removeElLocal="removeLocal(el)"
-                          @refresh="renewLocal"
-                          :item="item"
-                          :key="i"/>
+                         @removeElLocal="removeLocal(i)"
+                         @refresh="renewLocal"
+                         :item="item"
+                         :index="i"
+                         :key="i"/>
         </div>
       </div>
     </div>
@@ -32,6 +33,7 @@
 <script>
 import CardComponent from "@/components/CardComponent.vue";
 import CardFavorite from "@/components/CardFavorite.vue";
+import {mapMutations} from "vuex";
 
 export default {
   name: 'App',
@@ -51,20 +53,20 @@ export default {
   },
   computed: {},
   methods: {
+    ...mapMutations('weather', ['delCity']),
     addCard(){
       this.i ++;
       this.cards.push({id: this.i});
     },
     remove(i) {
+      console.log(i);
       this.cards.splice(i, 1);
+      this.delCity(i);
     },
-    removeLocal(i){
-      this.localCities.splice(i, 1);
+    removeLocal(index){
+      this.localCities.splice(index, 1);
       localStorage.setItem('localCities', JSON.stringify(this.localCities));
     },
-    renewLocal() {
-      this.localCities = JSON.parse(localStorage.getItem('localCities'));
-    }
   },
 }
 </script>

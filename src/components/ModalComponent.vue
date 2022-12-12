@@ -28,22 +28,6 @@ export default {
     close() {
       this.$emit('closeModal');
     },
-    handleOutsideClick(e) {
-      if (this.$refs.overlay.contains(e.target) && this.isActive) {
-        this.close();
-      }
-    },
-  },
-  watch: {
-    isActive() {
-      if (this.isActive) {
-        document.body.classList.add("modal-open");
-        document.addEventListener("click", this.handleOutsideClick);
-      } else {
-        document.body.classList.remove("modal-open");
-        document.removeEventListener("click", this.handleOutsideClick);
-      }
-    },
   },
 };
 </script>

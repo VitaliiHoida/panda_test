@@ -2,31 +2,30 @@
   <div class="item_wrapper">
     <div class="head">
 
-      <div class="inputDiv" v-if="!isFavorite">
+      <div class="inputDiv" >
         <h3>Місто: &nbsp;</h3>
-        <auto-input :values="cityList" :default-value="city" v-if="!isFavorite" @choose-drop="chooseCity"/>
+        <auto-input :values="cityList" :default-value="city" @choose-drop="chooseCity"/>
       </div>
-      <div v-if="!isFavorite" class="head-btns">
+      <div class="head-btns">
         <button type="button" class="btn" @click="addToFavorites">До обраного</button>
         <button type="button" class="btn btn-remove" @click="openModal">Видалити</button>
       </div>
 
-      <button type="button" v-else class="btn btn-remove" @click="openModalLocal">Видалити</button>
 
     </div>
 
     <div class="body">
       <div class="table">
-        <div ><h3> {{ city.name }} </h3></div>
-        <div><h4> {{ cities[0]?.current?.weather[0].description }} </h4></div>
-        <div>Температура: {{ cities[0]?.current?.temp }} °C</div>
-        <div>Відчувається як: {{ cities[0]?.current?.feels_like }} °C</div>
-        <div>Вологість: {{ cities[0]?.current?.humidity }} %</div>
-        <div>УФ: {{ cities[0]?.current?.uvi }}</div>
-        <div>Точка роси: {{ cities[0]?.current?.dew_point }}°C</div>
-        <div>Видимість: {{ cities[0]?.current?.visibility / 1000 }} км</div>
-        <div>Тиск: {{ cities[0]?.current?.pressure }} гПа</div>
-        <div>Швидкість вітру: {{ cities[0]?.current?.wind_speed }} м/с</div>
+        <div><h3> {{ city.name }} </h3></div>
+        <div><h4> {{ cities[index]?.current?.weather[0].description }} </h4></div>
+        <div>Температура: {{ cities[index]?.current?.temp }} °C</div>
+        <div>Відчувається як: {{ cities[index]?.current?.feels_like }} °C</div>
+        <div>Вологість: {{ cities[index]?.current?.humidity }} %</div>
+        <div>УФ: {{ cities[index]?.current?.uvi }}</div>
+        <div>Точка роси: {{ cities[index]?.current?.dew_point }}°C</div>
+        <div>Видимість: {{ cities[index]?.current?.visibility / 1000 }} км</div>
+        <div>Тиск: {{ cities[index]?.current?.pressure }} гПа</div>
+        <div>Швидкість вітру: {{ cities[index]?.current?.wind_speed }} м/с</div>
       </div>
       <div class="chart">
         <Line :data="chartData" :options="chartOptions"/>
@@ -36,7 +35,7 @@
 
     <modal-component :isActive="show" @closeModal="close">
       <template #default>
-        <h2 class="modal_text">Видалити місто {{}} з цього списку?</h2>
+        <h2 class="modal_text">Видалити місто {{city.name}} з цього списку?</h2>
       </template>
       <template #footer>
         <button class="btn btn-remove" type="button" @click="deleteItem">
@@ -82,7 +81,7 @@ export default {
     Line,
     AutoInput,
   },
-  emits: ['deleteEl', 'removeElLocal', 'refresh'],
+  emits: ['deleteEl', 'refresh'],
   props: {
     index: {
       type: Number,
@@ -107,7 +106,7 @@ export default {
     chartData() {
       let arrLabels = [];
       let points = [];
-      this.cities[0]?.hourly?.forEach(item => {
+      this.cities[this.index]?.hourly?.forEach(item => {
         let date = new Date(item.dt * 1000);
         let hrs = date.getHours();
         let dates = date.getDate();
@@ -135,11 +134,6 @@ export default {
     ...mapActions('weather', ['getWeather']),
     openModal() {
       this.show = true;
-      this.$emit('removeEl')
-    },
-    openModalLocal() {
-      this.show = true;
-      this.$emit('removeElLocal')
     },
     close() {
       this.show = false;

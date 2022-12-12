@@ -6,16 +6,16 @@
 
     <div class="body">
       <div class="table">
-        <div ><h3> {{ item.name }} </h3></div>
-        <div><h4> {{ weather?.current?.weather[0].description }} </h4></div>
-        <div>Температура: {{ weather?.current?.temp }} °C</div>
-        <div>Відчувається як: {{ weather?.current?.feels_like }} °C</div>
-        <div>Вологість: {{ weather?.current?.humidity }} %</div>
-        <div>УФ: {{ weather?.current?.uvi }}</div>
-        <div>Точка роси: {{ weather?.current?.dew_point }}°C</div>
-        <div>Видимість: {{ weather?.current?.visibility / 1000 }} км</div>
-        <div>Тиск: {{ weather?.current?.pressure }} гПа</div>
-        <div>Швидкість вітру: {{ weather?.current?.wind_speed }} м/с</div>
+        <div><h3> {{ item.name }} </h3></div>
+        <div><h4> {{ localCities[index]?.current?.weather[0].description }} </h4></div>
+        <div>Температура: {{ localCities[index]?.current?.temp }} °C</div>
+        <div>Відчувається як: {{ localCities[index]?.current?.feels_like }} °C</div>
+        <div>Вологість: {{ localCities[index]?.current?.humidity }} %</div>
+        <div>УФ: {{ localCities[index]?.current?.uvi }}</div>
+        <div>Точка роси: {{ localCities[index]?.current?.dew_point }}°C</div>
+        <div>Видимість: {{ localCities[index]?.current?.visibility / 1000 }} км</div>
+        <div>Тиск: {{ localCities[index]?.current?.pressure }} гПа</div>
+        <div>Швидкість вітру: {{ localCities[index]?.current?.wind_speed }} м/с</div>
       </div>
       <div class="chart">
         <Line :data="chartData" :options="chartOptions"/>
@@ -25,7 +25,7 @@
 
     <modal-component :isActive="show" @closeModal="close">
       <template #default>
-        <h2 class="modal_text">Видалити місто {{}} з цього списку?</h2>
+        <h2 class="modal_text">Видалити місто {{ item.name }} зі списку обраного?</h2>
       </template>
       <template #footer>
         <button class="btn btn-remove" type="button" @click="deleteItem">
@@ -60,10 +60,10 @@ ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale,
 
 import ModalComponent from "@/components/ModalComponent.vue";
 
-import {mapActions} from "vuex";
+import {mapActions, mapState} from "vuex";
 
 export default {
-  name: 'CardComponent',
+  name: 'CardFavorite',
   components: {
     ModalComponent,
     Line,
@@ -73,23 +73,26 @@ export default {
       type: Object,
       required: true
     },
+    index: {
+      type: Number,
+      required: true,
+    }
   },
-  emits: ['deleteEl', 'removeElLocal', 'refresh'],
+  emits: ['removeElLocal'],
   data() {
     return {
       show: false,
-
       chartOptions: {
         responsive: true
       },
-      city: '',
     }
   },
   computed: {
+    ...mapState('weather', ['localCities']),
     chartData() {
       let arrLabels = [];
       let points = [];
-      this.weather?.hourly?.forEach(item => {
+      this.localCities[this.index]?.hourly?.forEach(item => {
         let date = new Date(item.dt * 1000);
         let hrs = date.getHours();
         let dates = date.getDate();
@@ -114,37 +117,20 @@ export default {
     }
   },
   methods: {
-    ...mapActions('weather', ['getWeather']),
-    openModal() {
-      this.show = true;
-      this.$emit('removeEl')
-    },
+    ...mapActions('weather', ['getLocalWeather']),
     openModalLocal() {
       this.show = true;
-      this.$emit('removeElLocal')
     },
     close() {
       this.show = false;
     },
     deleteItem() {
-      this.$emit('deleteEl');
+      this.$emit('removeElLocal');
       this.show = false;
     },
-    chooseCity(e) {
-      this.city = e;
-
-    },
-    addToFavorites() {
-      if (this.city) {
-        let localCities = JSON.parse(localStorage.getItem('localCities')) || [];
-        localCities.push(this.city);
-        localStorage.setItem('localCities', JSON.stringify(localCities));
-        this.$emit('refresh');
-      }
-    }
   },
-  created() {
-    this.getWeather({lat: this.item.lat, lon: this.item.lng})
+  mounted() {
+    this.getLocalWeather({lat: this.item.lat, lon: this.item.lng})
   }
 }
 </script>
@@ -166,15 +152,6 @@ export default {
   align-items: center;
   justify-content: space-between;
   float: right;
-}
-
-.inputDiv {
-  display: flex;
-  align-items: center;
-}
-
-.head *:not(:last-child) {
-  margin-right: 15px;
 }
 
 .body {
@@ -207,9 +184,6 @@ export default {
     width: 100%;
   }
 
-  .head-btns {
-    margin-top: 10px;
-  }
 }
 
 </style>
